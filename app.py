@@ -244,9 +244,9 @@ def submit():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+            # file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
             img = Image.open(file)
-            flash('Image successfully uploaded and displayed below')
+            # flash('Image successfully uploaded and displayed below')
 
             show_rank_num = 5
             img = transform(img)
@@ -277,14 +277,15 @@ def submit():
                     print(f'{i+1}: {p[index]*100:.2f}%')
                     print(f'Make: {list_of_make_key[make_position]}')
                     print(f'Model: {list_of_key[position]}\n')
-            return render_template("index.html", filename = filename, n = name)
+            # return render_template("index.html", filename = filename, n = name)
+            return render_template("index.html", n = name)
         else:
             flash('invalid image')
             return redirect(request.url)
 
-@app.route('/display/<filename>')
-def display_image(filename):
-    return redirect(url_for('static', filename='uploads/' + filename),code = 301)
+# @app.route('/display/<filename>')
+# def display_image(filename):
+#     return redirect(url_for('static', filename='uploads/' + filename),code = 301)
 
 if __name__ == "__main__":
     app.run(debug=True)
