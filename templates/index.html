@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width-device-width, initial-scale=1.0">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+        <title>Car Model Dectector</title>
+    </head>
+    <body>
+        <h1> Car Model Dectector </h1>
+        <p> 
+            Deep Learning Model (Resnet50) trained on the Stanford cars dataset 
+        </p>
+        <p>
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <ul>
+                {% for message in messages %}
+                 <li><h2>{{ message }}</h2></li> 
+                {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+        </p>
+        {% if filename %}
+        <div style="padding:20px;">
+            <img  
+            src="{{ url_for('display_image', filename=filename) }}"
+            width="200" 
+            height="200">
+        </div>
+        <h2 style="color: blue;">{{ n }}</h2>
+        {% endif %}
+        {% if img_url %}
+        <div style="padding:20px;">
+            <img  
+            src="{{ img_url }}"
+            width="200" 
+            height="200">
+        </div>
+        <h2 style="color: blue;">{{ n }}</h2>
+        {% endif %}
+        <h2>Upload the vehicle image</h2>
+        <form action="" method="POST" enctype="multipart/form-data">
+            <dl>
+                <p>
+                    <input type="file" name="file" class="form-control" autocomplete="off">
+                    <p>or</p>
+                    <input type="text" name="image_url" placeholder="Enter Image URL">
+                </p>
+            </dl>
+            <p>
+                <input type="submit" value="Submit" class="btn btn-info">
+            </p>
+        </form>
+    </body>
+</html>>
