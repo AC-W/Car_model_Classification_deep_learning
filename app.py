@@ -166,7 +166,6 @@ vehicle_model_type = {
 }
 
 transform = transforms.Compose([
-      # transforms.CenterCrop((200,200)),
       transforms.Grayscale(3),
       transforms.ToTensor(),
       transforms.Resize((160,160)),
