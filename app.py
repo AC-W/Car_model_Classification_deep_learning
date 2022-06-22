@@ -222,18 +222,18 @@ def submit():
                 list_of_make_key = list(models.keys())
                 list_of_make_value = list(models.values())
 
-                index = top[0][0]
-                position = list_of_value.index(index)
-                name = list_of_key[position]
-
+                name = []
+                prob = []
                 for i in range(len(top[0])):
                     index = top[0][i]
                     position = list_of_value.index(index)
                     make_position = convertLabels(index)
+                    name.append(f'{list_of_key[position]}')
+                    prob.append(f'Percentage: {p[index]*100:.2f}%')
                     print(f'{i+1}: {p[index]*100:.2f}%')
                     print(f'Make: {list_of_make_key[make_position]}')
                     print(f'Model: {list_of_key[position]}\n')
-            return render_template("index.html", img_url = img_url, n = name)
+            return render_template("index.html", img_url = img_url, m1 = name[0],m2 = name[1],m3 = name[2],m4 = name[3],m5 = name[4],p1 = prob[0],p2 = prob[1],p3 = prob[2],p4 = prob[3],p5 = prob[4])
 
         if 'file' not in request.files:
             flash('No file part')
@@ -266,19 +266,19 @@ def submit():
                 list_of_make_key = list(models.keys())
                 list_of_make_value = list(models.values())
                 
-                index = top[0][0]
-                position = list_of_value.index(index)
-                name = list_of_key[position]
-
+                name = []
+                prob = []
                 for i in range(len(top[0])):
                     index = top[0][i]
                     position = list_of_value.index(index)
                     make_position = convertLabels(index)
+                    name.append(f'{list_of_key[position]}')
+                    prob.append(f'Percentage: {p[index]*100:.2f}%')
                     print(f'{i+1}: {p[index]*100:.2f}%')
                     print(f'Make: {list_of_make_key[make_position]}')
                     print(f'Model: {list_of_key[position]}\n')
             # return render_template("index.html", filename = filename, n = name)
-            return render_template("index.html", n = name)
+            return render_template("index.html", m1 = name[0],m2 = name[1],m3 = name[2],m4 = name[3],m5 = name[4],p1 = prob[0],p2 = prob[1],p3 = prob[2],p4 = prob[3],p5 = prob[4])
         else:
             flash('invalid image')
             return redirect(request.url)

@@ -31,7 +31,6 @@
             height="200">
         </div>
         {% endif %}
-        <h2 style="color: blue;">{{ n }}</h2>
         {% if img_url %}
         <div style="padding:20px;">
             <img  
@@ -39,8 +38,17 @@
             width="200" 
             height="200">
         </div>
-        <h2 style="color: blue;">{{ n }}</h2>
         {% endif %}
+        <h3 style="color: blue;">{{ m1 }}</h3>
+        <h3 style="color: red;">{{ p1 }}</h3>
+        <h3 style="color: blue;">{{ m2 }}</h3>
+        <h3 style="color: red;">{{ p2 }}</h3>
+        <h3 style="color: blue;">{{ m3 }}</h3>
+        <h3 style="color: red;">{{ p3 }}</h3>
+        <h3 style="color: blue;">{{ m4 }}</h3>
+        <h3 style="color: red;">{{ p4 }}</h3>
+        <h3 style="color: blue;">{{ m5 }}</h3>
+        <h3 style="color: red;">{{ p5 }}</h3>
         <h2>Upload the vehicle image</h2>
         <form action="" method="POST" enctype="multipart/form-data">
             <dl>
