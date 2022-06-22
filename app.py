@@ -1,27 +1,14 @@
-import re
 from django.shortcuts import redirect
 from flask import Flask, flash, request, redirect, url_for, render_template
-from torchvision.transforms.functional import center_crop
-import numpy as np
-import time
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 import torchvision
-from torch.utils.data.sampler import SubsetRandomSampler
 import torchvision.transforms as transforms
-import matplotlib.pyplot as plt
 import os
 from werkzeug.utils import secure_filename
-import urllib.request
-import traceback
-import logging
-
 from PIL import Image
 import requests
 from io import BytesIO
-from IPython.display import clear_output
 
 def convertLabels(label):
   if label >= 1 and label <= 6: #Acura
