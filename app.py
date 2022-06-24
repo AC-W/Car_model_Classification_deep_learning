@@ -1,190 +1,25 @@
-import re
 from django.shortcuts import redirect
 from flask import Flask, flash, request, redirect, url_for, render_template
-from torchvision.transforms.functional import center_crop
-import numpy as np
-import time
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 import torchvision
-from torch.utils.data.sampler import SubsetRandomSampler
 import torchvision.transforms as transforms
-import matplotlib.pyplot as plt
 import os
 from werkzeug.utils import secure_filename
-import urllib.request
-import traceback
-import logging
-
 from PIL import Image
 import requests
 from io import BytesIO
-from IPython.display import clear_output
 
-def convertLabels(label):
-  if label >= 1 and label <= 6: #Acura
-    label = 0
-  elif label >= 7 and label <= 10: #Aston Martin
-    label = 1
-  elif label >= 11 and label <= 24: #Audi
-    label = 2
-  elif label >= 25 and label <= 37: #BMW
-    label = 3
-  elif label >= 38 and label <= 43: #Bentey
-    label = 4
-  elif label >= 44 and label <= 45: #Buick
-    label = 5
-  elif label >= 46 and label <= 49:
-    label = 6
-  elif label >= 50 and label <= 52:
-    label = 7
-  elif label >= 53 and label <= 74:
-    label = 8
-  elif label >= 75 and label <= 80:
-    label = 9
-  elif label >= 82 and label <= 96:
-    label = 10
-  elif label >= 98 and label <= 99:
-    label = 11
-  elif label >= 100 and label <= 103:
-    label = 12
-  elif label >= 105 and label <= 116:
-    label = 13
-  elif label >= 117 and label <= 121:
-    label = 14
-  elif label >= 123 and label <= 124 or label == 0:
-    label = 15
-  elif label >= 125 and label <= 128:
-    label = 16
-  elif label >= 129 and label <= 139: #Hyundai
-    label = 17
-  elif label >= 140 and label <= 141:
-    label = 18
-  elif label >= 144 and label <= 148:
-    label = 19
-  elif label >= 149 and label <= 152:
-    label = 20
-  elif label >= 153 and label <= 154:
-    label = 21
-  elif label >= 160 and label <= 165:
-    label = 22
-  elif label >= 167 and label <= 170:
-    label = 23
-  elif label >= 174 and label <= 176:
-    label = 24
-  elif label >= 178 and label <= 179:
-    label = 25
-  elif label >= 180 and label <= 183:
-    label = 26
-  elif label >= 185 and label <= 188: #Toyota
-    label = 27
-  elif label >= 189 and label <= 191:
-    label = 28
-  elif label >= 192 and label <= 194:
-    label = 29
-  elif label == 81:
-    label = 30
-  elif label == 97:
-    label = 31
-  elif label == 104:
-    label = 32
-  elif label == 122:
-    label = 33
-  elif label == 142:
-    label = 34
-  elif label == 143:
-    label = 35
-  elif label == 155:
-    label = 36
-  elif label == 156:
-    label = 37
-  elif label == 157:
-    label = 38
-  elif label == 158:
-    label = 39
-  elif label == 159:
-    label = 40
-  elif label == 166:
-    label = 41
-  elif label == 171:
-    label = 42
-  elif label == 172:
-    label = 43
-  elif label == 173:
-    label = 44
-  elif label == 177:
-    label = 45
-  elif label == 184:
-    label = 46
-  elif label == 195:
-    label = 47
-  else:
-    return -1
-  return label
-
-all_classes = {'AM General Hummer SUV 2000': 0, 'Acura RL Sedan 2012': 1, 'Acura TL Sedan 2012': 2, 'Acura TL Type-S 2008': 3, 'Acura TSX Sedan 2012': 4, 'Acura Integra Type R 2001': 5, 'Acura ZDX Hatchback 2012': 6, 'Aston Martin V8 Vantage Convertible 2012': 7, 'Aston Martin V8 Vantage Coupe 2012': 8, 'Aston Martin Virage Convertible 2012': 9, 'Aston Martin Virage Coupe 2012': 10, 'Audi RS 4 Convertible 2008': 11, 'Audi A5 Coupe 2012': 12, 'Audi TTS Coupe 2012': 13, 'Audi R8 Coupe 2012': 14, 'Audi V8 Sedan 1994': 15, 'Audi 100 Sedan 1994': 16, 'Audi 100 Wagon 1994': 17, 'Audi TT Hatchback 2011': 18, 'Audi S6 Sedan 2011': 19, 'Audi S5 Convertible 2012': 20, 'Audi S5 Coupe 2012': 21, 'Audi S4 Sedan 2012': 22, 'Audi S4 Sedan 2007': 23, 'Audi TT RS Coupe 2012': 24, 'BMW ActiveHybrid 5 Sedan 2012': 25, 'BMW 1 Series Convertible 2012': 26, 'BMW 1 Series Coupe 2012': 27, 'BMW 3 Series Sedan 2012': 28, 'BMW 3 Series Wagon 2012': 29, 'BMW 6 Series Convertible 2007': 30, 'BMW X5 SUV 2007': 31, 'BMW X6 SUV 2012': 32, 'BMW M3 Coupe 2012': 33, 'BMW M5 Sedan 2010': 34, 'BMW M6 Convertible 2010': 35, 'BMW X3 SUV 2012': 36, 'BMW Z4 Convertible 2012': 37, 'Bentley Continental Supersports Conv. Convertible 2012': 38, 'Bentley Arnage Sedan 2009': 39, 'Bentley Mulsanne Sedan 2011': 40, 'Bentley Continental GT Coupe 2012': 41, 'Bentley Continental GT Coupe 2007': 42, 'Bentley Continental Flying Spur Sedan 2007': 43, 'Bugatti Veyron 16.4 Convertible 2009': 44, 'Bugatti Veyron 16.4 Coupe 2009': 45, 'Buick Regal GS 2012': 46, 'Buick Rainier SUV 2007': 47, 'Buick Verano Sedan 2012': 48, 'Buick Enclave SUV 2012': 49, 'Cadillac CTS-V Sedan 2012': 50, 'Cadillac SRX SUV 2012': 51, 'Cadillac Escalade EXT Crew Cab 2007': 52, 'Chevrolet Silverado 1500 Hybrid Crew Cab 2012': 53, 'Chevrolet Corvette Convertible 2012': 54, 'Chevrolet Corvette ZR1 2012': 55, 'Chevrolet Corvette Ron Fellows Edition Z06 2007': 56, 'Chevrolet Traverse SUV 2012': 57, 'Chevrolet Camaro Convertible 2012': 58, 'Chevrolet HHR SS 2010': 59, 'Chevrolet Impala Sedan 2007': 60, 'Chevrolet Tahoe Hybrid SUV 2012': 61, 'Chevrolet Sonic Sedan 2012': 62, 'Chevrolet Express Cargo Van 2007': 63, 'Chevrolet Avalanche Crew Cab 2012': 64, 'Chevrolet Cobalt SS 2010': 65, 'Chevrolet Malibu Hybrid Sedan 2010': 66, 'Chevrolet TrailBlazer SS 2009': 67, 'Chevrolet Silverado 2500HD Regular Cab 2012': 68, 'Chevrolet Silverado 1500 Classic Extended Cab 2007': 69, 'Chevrolet Express Van 2007': 70, 'Chevrolet Monte Carlo Coupe 2007': 71, 'Chevrolet Malibu Sedan 2007': 72, 'Chevrolet Silverado 1500 Extended Cab 2012': 73, 'Chevrolet Silverado 1500 Regular Cab 2012': 74, 'Chrysler Aspen SUV 2009': 75, 'Chrysler Sebring Convertible 2010': 76, 'Chrysler Town and Country Minivan 2012': 77, 'Chrysler 300 SRT-8 2010': 78, 'Chrysler Crossfire Convertible 2008': 79, 'Chrysler PT Cruiser Convertible 2008': 80, 'Daewoo Nubira Wagon 2002': 81, 'Dodge Caliber Wagon 2012': 82, 'Dodge Caliber Wagon 2007': 83, 'Dodge Caravan Minivan 1997': 84, 'Dodge Ram Pickup 3500 Crew Cab 2010': 85, 'Dodge Ram Pickup 3500 Quad Cab 2009': 86, 'Dodge Sprinter Cargo Van 2009': 87, 'Dodge Journey SUV 2012': 88, 'Dodge Dakota Crew Cab 2010': 89, 'Dodge Dakota Club Cab 2007': 90, 'Dodge Magnum Wagon 2008': 91, 'Dodge Challenger SRT8 2011': 92, 'Dodge Durango SUV 2012': 93, 'Dodge Durango SUV 2007': 94, 'Dodge Charger Sedan 2012': 95, 'Dodge Charger SRT-8 2009': 96, 'Eagle Talon Hatchback 1998': 97, 'FIAT 500 Abarth 2012': 98, 'FIAT 500 Convertible 2012': 99, 'Ferrari FF Coupe 2012': 100, 'Ferrari California Convertible 2012': 101, 'Ferrari 458 Italia Convertible 2012': 102, 'Ferrari 458 Italia Coupe 2012': 103, 'Fisker Karma Sedan 2012': 104, 'Ford F-450 Super Duty Crew Cab 2012': 105, 'Ford Mustang Convertible 2007': 106, 'Ford Freestar Minivan 2007': 107, 'Ford Expedition EL SUV 2009': 108, 'Ford Edge SUV 2012': 109, 'Ford Ranger SuperCab 2011': 110, 'Ford GT Coupe 2006': 111, 'Ford F-150 Regular Cab 2012': 112, 'Ford F-150 Regular Cab 2007': 113, 'Ford Focus Sedan 2007': 114, 'Ford E-Series Wagon Van 2012': 115, 'Ford Fiesta Sedan 2012': 116, 'GMC Terrain SUV 2012': 117, 'GMC Savana Van 2012': 118, 'GMC Yukon Hybrid SUV 2012': 119, 'GMC Acadia SUV 2012': 120, 'GMC Canyon Extended Cab 2012': 121, 'Geo Metro Convertible 1993': 122, 'HUMMER H3T Crew Cab 2010': 123, 'HUMMER H2 SUT Crew Cab 2009': 124, 'Honda Odyssey Minivan 2012': 125, 'Honda Odyssey Minivan 2007': 126, 'Honda Accord Coupe 2012': 127, 'Honda Accord Sedan 2012': 128, 'Hyundai Veloster Hatchback 2012': 129, 'Hyundai Santa Fe SUV 2012': 130, 'Hyundai Tucson SUV 2012': 131, 'Hyundai Veracruz SUV 2012': 132, 'Hyundai Sonata Hybrid Sedan 2012': 133, 'Hyundai Elantra Sedan 2007': 134, 'Hyundai Accent Sedan 2012': 135, 'Hyundai Genesis Sedan 2012': 136, 'Hyundai Sonata Sedan 2012': 137, 'Hyundai Elantra Touring Hatchback 2012': 138, 'Hyundai Azera Sedan 2012': 139, 'Infiniti G Coupe IPL 2012': 140, 'Infiniti QX56 SUV 2011': 141, 'Isuzu Ascender SUV 2008': 142, 'Jaguar XK XKR 2012': 143, 'Jeep Patriot SUV 2012': 144, 'Jeep Wrangler SUV 2012': 145, 'Jeep Liberty SUV 2012': 146, 'Jeep Grand Cherokee SUV 2012': 147, 'Jeep Compass SUV 2012': 148, 'Lamborghini Reventon Coupe 2008': 149, 'Lamborghini Aventador Coupe 2012': 150, 'Lamborghini Gallardo LP 570-4 Superleggera 2012': 151, 'Lamborghini Diablo Coupe 2001': 152, 'Land Rover Range Rover SUV 2012': 153, 'Land Rover LR2 SUV 2012': 154, 'Lincoln Town Car Sedan 2011': 155, 'MINI Cooper Roadster Convertible 2012': 156, 'Maybach Landaulet Convertible 2012': 157, 'Mazda Tribute SUV 2011': 158, 'McLaren MP4-12C Coupe 2012': 159, 'Mercedes-Benz 300-Class Convertible 1993': 160, 'Mercedes-Benz C-Class Sedan 2012': 161, 'Mercedes-Benz SL-Class Coupe 2009': 162, 'Mercedes-Benz E-Class Sedan 2012': 163, 'Mercedes-Benz S-Class Sedan 2012': 164, 'Mercedes-Benz Sprinter Van 2012': 165, 'Mitsubishi Lancer Sedan 2012': 166, 'Nissan Leaf Hatchback 2012': 167, 'Nissan NV Passenger Van 2012': 168, 'Nissan Juke Hatchback 2012': 169, 'Nissan 240SX Coupe 1998': 170, 'Plymouth Neon Coupe 1999': 171, 'Porsche Panamera Sedan 2012': 172, 'Ram C/V Cargo Van Minivan 2012': 173, 'Rolls-Royce Phantom Drophead Coupe Convertible 2012': 174, 'Rolls-Royce Ghost Sedan 2012': 175, 'Rolls-Royce Phantom Sedan 2012': 176, 'Scion xD Hatchback 2012': 177, 'Spyker C8 Convertible 2009': 178, 'Spyker C8 Coupe 2009': 179, 'Suzuki Aerio Sedan 2007': 180, 'Suzuki Kizashi Sedan 2012': 181, 'Suzuki SX4 Hatchback 2012': 182, 'Suzuki SX4 Sedan 2012': 183, 'Tesla Model S Sedan 2012': 184, 'Toyota Sequoia SUV 2012': 185, 'Toyota Camry Sedan 2012': 186, 'Toyota Corolla Sedan 2012': 187, 'Toyota 4Runner SUV 2012': 188, 'Volkswagen Golf Hatchback 2012': 189, 'Volkswagen Golf Hatchback 1991': 190, 'Volkswagen Beetle Hatchback 2012': 191, 'Volvo C30 Hatchback 2012': 192, 'Volvo 240 Sedan 1993': 193, 'Volvo XC90 SUV 2007': 194, 'smart fortwo Convertible 2012': 195}
-
-
-vehicle_model_type = {
-  "Acura": 0,
-  "Aston Martin": 1,
-  "Audi": 2,
-  "BMW": 3,
-  "Bentley": 4,
-  "Bugatti":5,
-  "Buick":6,
-  "Cadillac":7,
-  "Chevrolet":8,
-  "Chrysler":9,
-  "Dodge":10,
-  "FIAT":11,
-  "Ferrari":12,
-  "Ford":13,
-  "GMC":14,
-  "HUMMER":15,
-  "Honda":16,
-  "Hyundai":17,
-  "Infiniti":18,
-  "Jeep":19,
-  "Lamborghini":20,
-  "Land Rover":21,
-  "Mercedes-Benz":22,
-  "Nissan":23,
-  "Rolls-Royce":24,
-  "Spyker":25,
-  "Suzuki":26,
-  "Toyota":27,
-  "Volkswagen":28,
-  "Volvo":29,
-  "Daewoo":30,
-  "Eagle Talon":31,
-  "Fisker":32,
-  "Geo Metro":33,
-  "Isuzu":34,
-  "Jaguar":35,
-  "Lincoln":36,
-  "MINI Cooper":37,
-  "Maybach":38,
-  "Mazda":39,
-  "McLaren":40,
-  "Mitsubishi":41,
-  "Plymouth":42,
-  "Porsche":43,
-  "Ram":44,
-  "Scion":45,
-  "Tesla":46,
-  "smart":47
-}
+model_names = {0: 'Audi A3 hatchback', 1: 'Audi A4L', 2: 'Audi A6L', 3: 'Audi Q3', 4: 'Audi Q5', 5: 'Audi A3 sedan', 6: 'Audi A1', 7: 'Audi A4 estate', 8: 'Audi A5 convertible', 9: 'Audi A5 coupe', 10: 'Audi A5 hatchback', 11: 'Audi A7', 12: 'Audi A8L', 13: 'Audi Q7', 14: 'Audi S5 convertible', 15: 'Audi S8', 16: 'Audi TTS coupe', 17: 'Audi TT coupe', 18: 'BWM 3 Series', 19: 'BWM X1', 20: 'BWM 5 Series', 21: 'BWM M5', 22: 'BWM 2 Series', 23: 'BWM 3 Series GT', 24: 'BWM 3 Series convertible', 25: 'BWM 3 Series estate', 26: 'BWM 3 Series coupe', 27: 'BWM 4 Series convertible', 28: 'BWM 5 Series GT', 29: 'BWM 6 Series', 30: 'BWM 7 Series', 31: 'BWM X3', 32: 'BWM X4', 33: 'BWM X5', 34: 'BWM X6', 35: 'BWM 1 Series hatchback', 36: 'Benz C Class', 37: 'Benz GLK Class', 38: 'Benz E Class', 39: 'Benz C Class AMG', 40: 'Benz G Class AMG', 41: 'Benz A Class', 42: 'Benz C Class estate', 43: 'Benz E Class convertible', 44: 'Benz E Class couple', 45: 'Benz GL Class', 46: 'Benz R Class', 47: 'Benz SLK Class', 48: 'Benz S Class', 49: 'encore', 50: 'Buick GL8 Luxury Business', 51: 'Buick GL8 Business', 52: 'Regal', 53: 'Regal GS', 54: 'Lacrosse', 55: 'Exclle', 56: 'EXCELLE  GT', 57: 'EXCELLE  XT', 58: 'Enclave', 59: 'Crosstour', 60: 'Crider', 61: 'Accord', 62: 'Jade', 63: 'Spirior', 64: 'Civic', 65: 'Honda CR-V', 66: 'Peugeot 2008', 67: 'Peugeot 207 hatchback', 68: 'Peugeot 207 sedan', 69: 'Peugeot 3008', 70: 'Peugeot 301', 71: 'Peugeot 307 hatchback', 72: 'Peugeot 307 sedan', 73: 'Peugeot 308', 74: 'Peugeot 408', 75: 'Peugeot 508', 76: 'Peugeot 207CC', 77: 'Peugeot 308SW', 78: 'Peugeot 4008', 79: 'Peugeot RCZ', 80: 'Peugeot 308CC', 81: 'BYD F0', 82: 'BYD F3R', 83: 'BYD F6', 84: 'BYD G3', 85: 'BYD L3', 86: 'BYD M6', 87: 'BYD S6', 88: 'Panamera', 89: 'Porsche 911', 90: 'Canyenne', 91: 'Cayman', 92: 'BAW E Series sedan ', 93: 'BAW E Series hatchback', 94: 'Baojun 610', 95: 'Baojun 630', 96: 'Lechi', 97: 'Besturn B50', 98: 'Besturn B90', 99: 'Besturn X80', 100: 'Besturn B70', 101: 'Great Wall C50', 102: 'Great Wall M2', 103: 'Great Wall M4', 104: 'Great Wall V80', 105: 'Wingle 5', 106: 'Xuanli', 107: 'Xuanli CROSS', 108: 'Benben', 109: 'Benben MINI', 110: 'Changan CS35', 111: 'Changan CX20', 112: 'Yidong', 113: 'Yuexiang V3', 114: 'Yuexiang V5', 115: 'Yuexiang hatchback', 116: 'Yuexiang sedan', 117: 'Zhishang XT', 118: 'Ruiping', 119: 'Zhixiang', 120: 'Benben LOVE', 121: 'Cross Polo', 122: 'Polo hatchback', 123: 'Polo sedan', 124: 'Cross Lavida', 125: 'Gran Lavida', 126: 'Lavide', 127: 'Passat', 128: 'Passat Lingyu', 129: 'Santana', 130: 'Touran', 131: 'Tiguan', 132: 'Volkswagen Eos', 133: 'Golf convertible ', 134: 'Golf estate', 135: 'Phaeton', 136: 'Beetle', 137: 'Multivan', 138: 'Magotan estate', 139: 'Scirocco', 140: 'Touareg', 141: 'Sharan', 142: 'Variant', 143: 'Tiguan abroad version', 144: 'Bora', 145: 'Golf', 146: 'Golf GTI', 147: 'Jetta', 148: 'Magotan', 149: 'Sagitar', 150: 'Volkswagen CC', 151: 'DS 5', 152: 'DS 5LS', 153: 'DS 3', 154: 'DS 4', 155: 'Lingzhi', 156: 'Jingyi', 157: 'Fengshen CROSS', 158: 'Fengshen H30', 159: 'Fengshen S30', 160: 'Fengshen A60', 161: 'Shuaike', 162: 'Fiesta sedan', 163: 'Classic Focus hatchback', 164: 'Classic Focus sedan', 165: 'S-MAX', 166: 'New Focus hatchback', 167: 'New Focus sedan', 168: 'Ecosport', 169: 'Mendeo Zhisheng', 170: 'Fiesta hatchback', 171: 'Focus ST', 172: 'Mustang', 173: 'Feixiang', 174: 'Zhiyue', 175: 'Bravo', 176: 'FIAT 500', 177: 'Qiteng M70', 178: 'Chuanqi GS5', 179: 'Haval H3', 180: 'Wrangler', 181: 'Compass', 182: 'Patriot', 183: 'Gaguar XJ', 184: 'Gaguar XF', 185: 'Seville SLS', 186: 'Cadillac XTS', 187: 'Cadillac CTS', 188: 'Cadillac ATS-L', 189: 'Cadillac SRX', 190: 'Wind Lang', 191: 'Koleos', 192: 'Latitude', 193: 'Scenic', 194: 'Landwind X8', 195: 'Landwind X5', 196: 'MINI', 197: 'MINI CLUBMAN', 198: 'MINI COUNTRYMAN', 199: 'MINI PACEMAN', 200: 'Teana', 201: 'New Sylphy', 202: 'Sylphy', 203: 'Sunshine', 204: 'Qashqai', 205: 'Livina', 206: 'Tiida', 207: 'Ma Chi', 208: 'Nissan NV200', 209: 'Nissan GT-R', 210: 'Fabia', 211: 'Octavia', 212: 'Superb', 213: 'Yeti', 214: 'Haorui', 215: 'Rapid', 216: 'Superb Derivative', 217: 'Kyron', 218: 'WeaLink X5', 219: 'i30', 220: 'ix35', 221: 'Avante', 222: 'Sonata', 223: 'Mistra', 224: 'Moinca', 225: 'Santafe', 226: 'Rena', 227: 'Verna', 228: 'Sonata 8', 229: 'Elantra Yuedong', 230: 'Rohens', 231: 'Equus', 232: 'Veloster', 233: 'Infiniti Q50', 234: 'Infiniti Q70L', 235: 'Infiniti QX50', 236: 'Infiniti QX70', 237: 'Infiniti QX80', 238: 'Infiniti G Class', 239: 'Zotye 5008', 240: 'Weizhi', 241: 'Weizhi V2', 242: 'Weizhi V5', 243: 'Xiali N5', 244: 'Chrysler 300C', 245: 'Discovery', 246: 'Range Rover', 247: 'Evoque', 248: 'Range Rover Sport', 249: 'Gallardo', 250: 'Forte', 251: 'KIA K2 sedan', 252: 'KIA K3', 253: 'KIA K3S', 254: 'KIA K5', 255: 'Sportage', 256: 'Soul', 257: 'Sportage R', 258: 'Borrego', 259: 'Shuma', 260: 'Sorento', 261: 'Kaizun', 262: 'Roewe 350', 263: 'Roewe 750', 264: 'Roewe 550', 265: 'Impreza hatchback', 266: 'Impreza sedan', 267: 'MAXUS V80xs', 268: 'c-Elysee sedan', 269: 'Elysee', 270: 'Quatre hatchback', 271: 'Quatre sedan', 272: 'Citroen C2', 273: 'Citroen C4L', 274: 'Citroen C5', 275: 'Yongyuan A380', 276: 'Toyota RAV4', 277: 'Crown', 278: 'Lcruiser', 279: 'Prado', 280: 'Prius', 281: 'Reiz', 282: 'Vios', 283: 'Huaguan', 284: 'Venza', 285: 'Alphard', 286: 'Toyota 86', 287: 'Camry', 288: 'Camry hybrid', 289: 'Yaris', 290: 'EZ', 291: 'Qoros 3', 292: 'Saboo GX5', 293: 'Haima M3', 294: 'Haima S5', 295: 'Haima S7', 296: 'Haimaqishi', 297: 'Haydo', 298: 'Premacy', 299: 'Qiubite', 300: 'Family M5', 301: 'Lusheng E70', 302: 'Geely SC7', 303: 'King Kong sedan', 304: 'Classic Imperial hatchback', 305: 'Classic Imperial sedan', 306: 'Ziyoujian', 307: 'Geely EC8', 308: 'Binyue', 309: 'Heyue RS', 310: 'Ruifeng M5', 311: 'Ruifeng S5', 312: 'Ruiying', 313: 'Tongyue', 314: 'Heyue', 315: 'Dahaishi', 316: 'Lexus CT', 317: 'Lexus ES hybrid', 318: 'Lexus GS', 319: 'Lexus GS hybrid', 320: 'Lexus GX', 321: 'Lexus IS', 322: 'Lexus IS convertible ', 323: 'Lexus LS hybrid', 324: 'Lexus RX', 325: 'Lexus RX hybrid', 326: 'Lexus ES', 327: 'Lifan 520', 328: 'Lifan 720', 329: 'Lifan 320', 330: 'Jingyue', 331: 'Atenza', 332: 'Mazda CX7', 333: 'Ruiyi', 334: 'Ruiyi coupe', 335: 'Mazda 6', 336: 'Mazda 3 abroad version', 337: 'Mazda 5', 338: 'Mazda 2', 339: 'Mazda 2 sedan', 340: 'Mazda 3', 341: 'Mazda 3 Xingcheng hatchback', 342: 'Mazda 3 Xingcheng sedan', 343: 'Mazda CX-5', 344: 'Axela sedan', 345: 'Eastar Cross', 346: 'Fulwin 2 hatchback', 347: 'Fulwin 2 sedan', 348: 'Chrey A3 hatchback', 349: 'Chrey A3 sedan', 350: 'Chrey E5', 351: 'Chrey QQ', 352: 'Chrey QQ3', 353: 'Chrey X1', 354: 'Cowin 2', 355: 'Cowin 3', 356: 'Tiggo', 357: 'Tiggo 5', 358: 'Arrizo 7', 359: 'Ruiqi G5', 360: 'smart fortwo', 361: 'Volvo C30', 362: 'Volvo S60', 363: 'Volvo V40', 364: 'Volvo V40 CrossCountry', 365: 'Volvo V60', 366: 'Volvo XC60', 367: 'Volvo XC90 abroad version', 368: 'Volvo C70', 369: 'Volvo S40', 370: 'Volvo S80L', 371: 'Volvo S60L', 372: 'Youyou', 373: 'Alto', 374: 'Cultus', 375: 'Tianyu SX4 hatchback', 376: 'Tianyu SX4 sedan', 377: 'Tianyushangyue', 378: 'Yuyan', 379: 'Kazishi', 380: 'Bei Douxing', 381: 'Linian S1', 382: 'MG3 SW', 383: 'MG5', 384: 'MG6 sedan', 385: 'MG6 hatchback', 386: 'MG7', 387: 'MG3', 388: 'Antara', 389: 'Zafira', 390: 'GTC hatchback', 391: 'Venucia R50', 392: 'Venucia D50', 393: 'Pajero', 394: 'Grandis', 395: 'Evo', 396: 'ASX abroad version', 397: 'Outlander abroad version', 398: 'Mitsubishi Fortis', 399: 'Mitsubishi Lancer EX', 400: 'SAAB D70', 401: 'Wulinghongguang', 402: 'Wulingzhiguang', 403: 'Wulingrongguang', 404: 'AVEO hatchback', 405: 'Trax', 406: 'Epica', 407: 'Cruze sedan', 408: 'Cruze hatchback', 409: 'Captiva', 410: 'Aveo', 411: 'Lova', 412: 'Malibu', 413: 'Sail hatchback', 414: 'Sail sedan', 415: 'Aveo sedan', 416: 'Camaro', 417: 'Zhonghua H330', 418: 'Zhonghua H530', 419: 'Zhonghua V5', 420: 'Zhonghua Junjie', 421: 'Zhonghua Junjie CROSS', 422: 'Zhonghua Junjie FRV', 423: 'Zhonghua Junjie FSV', 424: 'Zhonghua Junjie Wagon', 425: 'Zhonghua Zunchi', 426: 'Zhonghua H230', 427: 'Brabus S Class', 428: 'Grandtiger G3', 429: 'Grandtiger TUV', 430: 'Qijian A9'}
 
 transform = transforms.Compose([
-      # transforms.CenterCrop((200,200)),
-      transforms.Grayscale(3),
-      transforms.ToTensor(),
-      transforms.Resize((160,160)),
-      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-  ])
+    transforms.Resize((256)),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Grayscale(3),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
+])
+
 UPLOAD_FOLDER = 'static/uploads/'
 app = Flask(__name__)
 app.secret_key = "cairocoders-ednalan"
@@ -198,9 +33,9 @@ def allowed_file(filename):
 
 new_net = torchvision.models.resnet50(pretrained=True)
 num_ftrs = new_net.fc.in_features
-new_net.fc = nn.Linear(num_ftrs, 196)
+new_net.fc = nn.Linear(num_ftrs, 431)
 
-state = torch.load('bestModel_77.64%',map_location=torch.device('cpu'))
+state = torch.load('bestModel',map_location=torch.device('cpu'))
 new_net.load_state_dict(state)
 
 @app.route("/")
@@ -227,27 +62,13 @@ def submit():
                 _, top = torch.topk(all,show_rank_num)
                 top = top.tolist()
 
-                classes = all_classes
-                models = vehicle_model_type
-
-                list_of_key = list(classes.keys())
-                list_of_value = list(classes.values())
-
-                list_of_make_key = list(models.keys())
-                list_of_make_value = list(models.values())
-
-                index = top[0][0]
-                position = list_of_value.index(index)
-                name = list_of_key[position]
-
+                name = []
+                prob = []
                 for i in range(len(top[0])):
                     index = top[0][i]
-                    position = list_of_value.index(index)
-                    make_position = convertLabels(index)
-                    print(f'{i+1}: {p[index]*100:.2f}%')
-                    print(f'Make: {list_of_make_key[make_position]}')
-                    print(f'Model: {list_of_key[position]}\n')
-            return render_template("index.html", img_url = img_url, n = name)
+                    name.append(f'Model: {model_names.get(index)}')
+                    prob.append(f'Percentage: {p[index]*100:.2f}%')
+            return render_template("index.html", img_url = img_url, m1 = name[0],m2 = name[1],m3 = name[2],m4 = name[3],m5 = name[4],p1 = prob[0],p2 = prob[1],p3 = prob[2],p4 = prob[3],p5 = prob[4])
 
         if 'file' not in request.files:
             flash('No file part')
@@ -258,9 +79,9 @@ def submit():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+            # file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
             img = Image.open(file)
-            flash('Image successfully uploaded and displayed below')
+            # flash('Image successfully uploaded and displayed below')
 
             show_rank_num = 5
             img = transform(img)
@@ -271,34 +92,20 @@ def submit():
                 _, top = torch.topk(all,show_rank_num)
                 top = top.tolist()
 
-                classes = all_classes
-                models = vehicle_model_type
-
-                list_of_key = list(classes.keys())
-                list_of_value = list(classes.values())
-
-                list_of_make_key = list(models.keys())
-                list_of_make_value = list(models.values())
-                
-                index = top[0][0]
-                position = list_of_value.index(index)
-                name = list_of_key[position]
-
+                name = []
+                prob = []
                 for i in range(len(top[0])):
                     index = top[0][i]
-                    position = list_of_value.index(index)
-                    make_position = convertLabels(index)
-                    print(f'{i+1}: {p[index]*100:.2f}%')
-                    print(f'Make: {list_of_make_key[make_position]}')
-                    print(f'Model: {list_of_key[position]}\n')
-            return render_template("index.html", filename = filename, n = name)
+                    name.append(f'Model: {model_names.get(index)}')
+                    prob.append(f'Percentage: {p[index]*100:.2f}%')
+            return render_template("index.html", m1 = name[0],m2 = name[1],m3 = name[2],m4 = name[3],m5 = name[4],p1 = prob[0],p2 = prob[1],p3 = prob[2],p4 = prob[3],p5 = prob[4])
         else:
             flash('invalid image')
             return redirect(request.url)
 
-@app.route('/display/<filename>')
-def display_image(filename):
-    return redirect(url_for('static', filename='uploads/' + filename),code = 301)
+# @app.route('/display/<filename>')
+# def display_image(filename):
+#     return redirect(url_for('static', filename='uploads/' + filename),code = 301)
 
 if __name__ == "__main__":
     app.run(debug=True)
