@@ -19,6 +19,14 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
 ])
 
+transform = transforms.Compose([
+    transforms.Resize((256)),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Grayscale(3),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
+])
+
 UPLOAD_FOLDER = 'static/uploads/'
 app = Flask(__name__)
 app.secret_key = "cairocoders-ednalan"
@@ -77,11 +85,7 @@ def submit():
             flash('No image selected for uploading')
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            # file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
             img = Image.open(file)
-            # flash('Image successfully uploaded and displayed below')
-
             show_rank_num = 5
             img = transform(img)
             with torch.no_grad():
@@ -102,9 +106,5 @@ def submit():
             flash('invalid image')
             return redirect(request.url)
 
-# @app.route('/display/<filename>')
-# def display_image(filename):
-#     return redirect(url_for('static', filename='uploads/' + filename),code = 301)
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
