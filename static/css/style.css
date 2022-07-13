@@ -1,0 +1,132 @@
+body{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: pink;
+
+}
+
+h1{
+    color: rgb(214, 81, 126);
+    padding: 10px;
+    -webkit-transition: all 0.4s;
+	-moz-transition: all 0.4s;
+	-ms-transition: all 0.4s;
+	-o-transition: all 0.4s;
+	transition: all 0.4s;
+}
+
+h1:hover{
+    border: solid;
+    border-radius: 10px;
+
+    transform: scale(1.2);
+}
+
+img{
+    border-radius: 40px;
+    margin-top: -20px;
+    border: none;
+    color: rgb(214, 81, 126);
+    -webkit-transition: all 0.4s;
+	-moz-transition: all 0.4s;
+	-ms-transition: all 0.4s;
+	-o-transition: all 0.4s;
+	transition: all 0.4s;
+}
+
+img:hover{
+    border: solid;
+    border-radius: 10px;
+
+    transform: scale(1.2);
+}
+
+.car_info{
+    border: none;
+    border-radius: 40px;
+    background-color: rgb(228, 156, 180);
+    padding: 10px;
+    margin: 30px;
+    margin-top: 5px;
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    justify-content: center;
+    font-style: bolder;
+    gap: 10px;
+    color: rgb(214, 81, 126);
+    -webkit-transition: all 0.4s;
+	-moz-transition: all 0.4s;
+	-ms-transition: all 0.4s;
+	-o-transition: all 0.4s;
+	transition: all 0.4s;
+}
+
+.car_info:hover {
+    border: solid;
+    border-radius: 10px;
+    /* background-color: hotpink; */
+    transform: scale(1.1);
+}
+
+.input_box{
+    border: none;
+    background-color: rgb(228, 156, 180);
+    padding: 10px;
+    display: grid;
+    grid-template-columns: auto auto auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 100px;
+    width: 30vw;
+    height: 10vh;
+    color: rgb(214, 81, 126);
+    -webkit-transition: all 0.4s;
+	-moz-transition: all 0.4s;
+	-ms-transition: all 0.4s;
+	-o-transition: all 0.4s;
+	transition: all 0.4s;
+}
+
+.input_box:hover{
+    border: solid;
+    border-radius: 10px;
+    /* background-color: hotpink; */
+
+    transform: scale(1.1);
+}
+
+.submit_button{
+    border: none;
+    padding: 10px;
+    display: grid;
+    justify-content: center;
+}
+
+#button_id{
+    margin: 20px;
+    background-color: rgb(228, 156, 180);
+    border: none;
+    border-width: 1.7px;
+    width: 100px;
+    height: 50px;
+    border-radius: 50px;
+    font-style: bolder;
+    font-weight: 800;
+    color: rgb(214, 81, 126);
+    -webkit-transition: all 0.2s;
+	-moz-transition: all 0.2s;
+	-ms-transition: all 0.2s;
+	-o-transition: all 0.2s;
+	transition: all 0.2s;
+}
+
+#button_id:hover{
+    /* background-color: hotpink; */
+    border: solid;
+    border-radius: 10px;
+
+    transform: scale(1.2);
+}

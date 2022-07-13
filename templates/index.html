@@ -5,10 +5,12 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width-device-width, initial-scale=1.0">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+        <link rel="stylesheet" href="..\static\css\style.css">
         <title>Car Model Dectection</title>
     </head>
-    <body>
-        <h1> Car Model Dectector </h1>
+    <h1> Car Model Dectector </h1>
+    <body> 
+        {% if messages %}
         <p>
             {% with messages = get_flashed_messages() %}
               {% if messages %}
@@ -20,12 +22,25 @@
               {% endif %}
             {% endwith %}
         </p>
+        {% endif %}
         {% if filename %}
         <div style="padding:20px;">
             <img  
             src="{{ url_for('display_image', filename=filename) }}"
             width="200" 
             height="200">
+        </div>
+        <div class="car_info">
+            <h3 style="color: rgb(214, 81, 126);">{{ m1 }}</h3>
+            <h3 style="color: red;">{{ p1 }}</h3>
+            <h3 style="color: rgb(214, 81, 126);">{{ m2 }}</h3>
+            <h3 style="color: red;">{{ p2 }}</h3>
+            <h3 style="color: rgb(214, 81, 126);">{{ m3 }}</h3>
+            <h3 style="color: red;">{{ p3 }}</h3>
+            <h3 style="color: rgb(214, 81, 126);">{{ m4 }}</h3>
+            <h3 style="color: red;">{{ p4 }}</h3>
+            <h3 style="color: rgb(214, 81, 126);">{{ m5 }}</h3>
+            <h3 style="color: red;">{{ p5 }}</h3>
         </div>
         {% endif %}
         {% if img_url %}
@@ -35,29 +50,32 @@
             width="200" 
             height="200">
         </div>
+        <div class="car_info">
+            <h3 style="color: rgb(214, 81, 126);">{{ m1 }}</h3>
+            <h3 style="color: red;">{{ p1 }}</h3>
+            <h3 style="color: rgb(214, 81, 126);">{{ m2 }}</h3>
+            <h3 style="color: red;">{{ p2 }}</h3>
+            <h3 style="color: rgb(214, 81, 126);">{{ m3 }}</h3>
+            <h3 style="color: red;">{{ p3 }}</h3>
+            <h3 style="color: rgb(214, 81, 126);">{{ m4 }}</h3>
+            <h3 style="color: red;">{{ p4 }}</h3>
+            <h3 style="color: rgb(214, 81, 126);">{{ m5 }}</h3>
+            <h3 style="color: red;">{{ p5 }}</h3>
+        </div>
         {% endif %}
-        <h3 style="color: blue;">{{ m1 }}</h3>
-        <h3 style="color: red;">{{ p1 }}</h3>
-        <h3 style="color: blue;">{{ m2 }}</h3>
-        <h3 style="color: red;">{{ p2 }}</h3>
-        <h3 style="color: blue;">{{ m3 }}</h3>
-        <h3 style="color: red;">{{ p3 }}</h3>
-        <h3 style="color: blue;">{{ m4 }}</h3>
-        <h3 style="color: red;">{{ p4 }}</h3>
-        <h3 style="color: blue;">{{ m5 }}</h3>
-        <h3 style="color: red;">{{ p5 }}</h3>
-        <h2>Upload the vehicle image</h2>
+        
+        {% if img_url %}
+        {% else %}
+            <h2>Upload the vehicle image</h2>
+        {% endif %}
         <form action="" method="POST" enctype="multipart/form-data">
-            <dl>
-                <p>
-                    <input type="file" name="file" class="form-control" autocomplete="off">
-                    <p>or</p>
-                    <input type="text" name="image_url" placeholder="Enter Image URL">
-                </p>
-            </dl>
-            <p>
-                <input type="submit" value="Submit" class="btn btn-info">
-            </p>
+            <div class="input_box">
+                <input type="file" name="file" class="form-control" autocomplete="off">
+                <input type="text" name="image_url" placeholder="Enter Image URL" style="background-color: rgb(227, 136, 167);">
+            </div>
+            <div class="submit_button">
+                <input type="submit" value="Submit" class="btn btn-info" id="button_id">
+            </div>
         </form>
     </body>
 </html>>

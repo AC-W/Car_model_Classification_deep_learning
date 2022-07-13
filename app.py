@@ -66,7 +66,7 @@ def submit():
                 prob = []
                 for i in range(len(top[0])):
                     index = top[0][i]
-                    name.append(f'Model: {model_names.get(index)}')
+                    name.append(f'{model_names.get(index)}')
                     prob.append(f'Percentage: {p[index]*100:.2f}%')
             return render_template("index.html", img_url = img_url, m1 = name[0],m2 = name[1],m3 = name[2],m4 = name[3],m5 = name[4],p1 = prob[0],p2 = prob[1],p3 = prob[2],p4 = prob[3],p5 = prob[4])
 
@@ -96,7 +96,7 @@ def submit():
                 prob = []
                 for i in range(len(top[0])):
                     index = top[0][i]
-                    name.append(f'Model: {model_names.get(index)}')
+                    name.append(f'{model_names.get(index)}')
                     prob.append(f'Percentage: {p[index]*100:.2f}%')
             return render_template("index.html", m1 = name[0],m2 = name[1],m3 = name[2],m4 = name[3],m5 = name[4],p1 = prob[0],p2 = prob[1],p3 = prob[2],p4 = prob[3],p5 = prob[4])
         else:
@@ -108,4 +108,4 @@ def submit():
 #     return redirect(url_for('static', filename='uploads/' + filename),code = 301)
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)
